@@ -136,6 +136,7 @@ whitelist:
         - '.. versionadded:: 3.6' # MonologBundle
         - '.. versionadded:: 3.8' # MonologBundle
         - '.. versionadded:: 3.5' # Monolog
+        - '.. versionadded:: 3.11.0' # Monolog
         - '.. _`a feature to test applications using Mercure`: https://github.com/symfony/panther#creating-isolated-browsers-to-test-apps-using-mercure-or-websocket'
         - 'End to End Tests (E2E)'
         - '.. versionadded:: 2.2.0' # Panther
