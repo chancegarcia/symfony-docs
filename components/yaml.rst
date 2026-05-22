@@ -101,27 +101,6 @@ error occurred::
         printf('Unable to parse the YAML string: %s', $exception->getMessage());
     }
 
-When parsing untrusted YAML, prefer rejecting aliases entirely unless your
-application explicitly relies on aliases or merge keys::
-
-    use Symfony\Component\Yaml\Yaml;
-
-    $value = Yaml::parse($yaml, Yaml::PARSE_EXCEPTION_ON_ALIAS, 200);
-
-If your application needs aliases, configure the parser limits explicitly. By
-default, the parser rejects documents that exceed 128 nested levels or use more
-than 128 collection aliases::
-
-    use Symfony\Component\Yaml\Yaml;
-
-    $value = Yaml::parse($yaml, 0, 200, 150);
-
-You can also use the :class:`Symfony\Component\Yaml\Parser` class directly if
-you prefer configuring the limits via its constructor.
-
-These limits reduce the impact of malicious documents, but they are not a
-substitute for validating and constraining untrusted input.
-
 Reading YAML Files
 ~~~~~~~~~~~~~~~~~~
 
@@ -229,6 +208,45 @@ During the parsing of the YAML contents, all the ``_`` characters are removed
 from the numeric literal contents, so there is not a limit in the number of
 underscores you can include or the way you group contents.
 
+Parsing Untrusted YAML
+~~~~~~~~~~~~~~~~~~~~~~
+
+`YAML anchors`_ or aliases let one node reference another (``&anchor`` and ``*anchor``).
+When a malicious document chains aliases that point at nested collections,
+resolving them produces exponential memory growth and can exhaust the
+process. If your application does not rely on aliases or merge keys, reject
+them outright with the ``PARSE_EXCEPTION_ON_ALIAS`` flag::
+
+    use Symfony\Component\Yaml\Yaml;
+
+    $yaml = <<<'YAML'
+        defaults: &defaults { retries: 3 }
+        service: *defaults
+        YAML;
+
+    Yaml::parse($yaml, Yaml::PARSE_EXCEPTION_ON_ALIAS); // throws an exception
+
+If your application does rely on aliases, the parser enforces two limits
+by default: at most 128 nesting levels and at most 128 collection alias
+resolutions per document. You can tune both with the optional arguments
+of ``Yaml::parse()`` and ``Yaml::parseFile()``::
+
+    use Symfony\Component\Yaml\Yaml;
+
+    // maxNestingLevel: 200
+    // maxAliasesForCollections: 64
+    $value = Yaml::parse($yaml, 0, 200, 64);
+
+The same arguments are available on the
+:class:`Symfony\\Component\\Yaml\\Parser` constructor when you instantiate
+the parser yourself.
+
+.. caution::
+
+    These limits make malicious documents harder to weaponize, but they
+    are not a substitute for validating and constraining input received
+    from untrusted sources.
+
 Advanced Usage: Flags
 ---------------------
 
@@ -302,23 +320,6 @@ Similarly you can use ``DUMP_EXCEPTION_ON_INVALID_TYPE`` when dumping::
 
     $data = new \stdClass(); // by default objects are invalid.
     Yaml::dump($data, 2, 4, Yaml::DUMP_EXCEPTION_ON_INVALID_TYPE); // throws an exception
-
-Disabling Aliases
-~~~~~~~~~~~~~~~~~
-
-Use the ``PARSE_EXCEPTION_ON_ALIAS`` flag to reject YAML aliases during parsing::
-
-    $yaml = <<<'YAML'
-        defaults: &defaults { retries: 3 }
-        service: *defaults
-        YAML;
-
-    Yaml::parse($yaml, Yaml::PARSE_EXCEPTION_ON_ALIAS); // throws an exception
-
-This is the recommended mode for untrusted YAML whenever your application does
-not rely on aliases or merge keys. You can combine this flag with the optional
-maximum nesting and collection-alias arguments of ``Yaml::parse()`` and
-``Yaml::parseFile()``.
 
 Date Handling
 ~~~~~~~~~~~~~
@@ -530,3 +531,4 @@ Add the ``--format`` option to get the output in JSON format:
 .. _`YAML`: https://yaml.org/
 .. _`ISO-8601`: https://www.iso.org/iso-8601-date-and-time-format.html
 .. _`PHP enumerations`: https://www.php.net/manual/en/language.types.enumerations.php
+.. _`YAML anchors`: https://yaml.org/spec/1.2.2/#692-node-anchors
