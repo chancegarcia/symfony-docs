@@ -155,87 +155,6 @@ When no tag name is specified, the fully qualified class name (FQCN) of the targ
     Previously, abstract classes were skipped during this process, meaning their
     attributes were not fully processed.
 
-.. _di-resource-tags:
-
-Resource Tags
-.............
-
-When using :ref:`service auto-discovery <service-container-services-load-example>`,
-you can use the ``#[AutoconfigureResourceTag]`` attribute to tag services that are
-loaded via the ``resource`` directive. This is similar to ``#[AutoconfigureTag]``,
-but only applies to services that are auto-discovered::
-
-    // src/Handler/HandlerInterface.php
-    namespace App\Handler;
-
-    use Symfony\Component\DependencyInjection\Attribute\AutoconfigureResourceTag;
-
-    #[AutoconfigureResourceTag('app.handler')]
-    interface HandlerInterface
-    {
-        // ...
-    }
-
-Services implementing ``HandlerInterface`` will only be tagged with ``app.handler``
-when they are loaded via auto-discovery (``resource`` directive), not when they are
-explicitly defined in the configuration.
-
-You can also define resource tags directly in your configuration files:
-
-.. configuration-block::
-
-    .. code-block:: yaml
-
-        # config/services.yaml
-        services:
-            _defaults:
-                autowire: true
-                autoconfigure: true
-                resource_tags:
-                    - 'app.handler'
-
-            App\:
-                resource: '../src/'
-
-    .. code-block:: xml
-
-        <!-- config/services.xml -->
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/services"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://symfony.com/schema/dic/services
-                https://symfony.com/schema/dic/services/services-1.0.xsd">
-
-            <services>
-                <defaults autowire="true" autoconfigure="true">
-                    <resource-tag name="app.handler"/>
-                </defaults>
-
-                <prototype namespace="App\" resource="../src/"/>
-            </services>
-        </container>
-
-    .. code-block:: php
-
-        // config/services.php
-        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
-
-        return function(ContainerConfigurator $container): void {
-            $services = $container->services()
-                ->defaults()
-                    ->autowire()
-                    ->autoconfigure()
-                    ->resourceTag('app.handler')
-            ;
-
-            $services->load('App\\', '../src/');
-        };
-
-.. versionadded:: 7.4
-
-    The ``#[AutoconfigureResourceTag]`` attribute and the ``resource_tags`` configuration
-    option were introduced in Symfony 7.4.
-
 For more advanced needs, you can define the automatic tags using the
 :method:`Symfony\\Component\\DependencyInjection\\ContainerBuilder::registerForAutoconfiguration` method.
 
@@ -367,8 +286,10 @@ call to support ``ReflectionMethod``::
     :method:`Symfony\\Component\\DependencyInjection\\ContainerBuilder::registerAttributeForAutoconfiguration`
     callable.
 
+.. _di-resource-tags:
+
 Tagging Non-Service Classes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 Not all classes need to be registered as services. Entities, value objects, and
 DTOs, for example, should be discoverable at compile time but must not be instantiated
@@ -431,6 +352,100 @@ using :method:`Symfony\\Component\\DependencyInjection\\ContainerBuilder::findTa
 
     The ``addResourceTag()`` and ``findTaggedResourceIds()`` methods were
     introduced in Symfony 7.3.
+
+Declaring Resource Tags from Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 7.4
+
+    Declaring resource tags through configuration files, and the
+    ``#[AutoconfigureResourceTag]`` attribute, was introduced in Symfony 7.4.
+
+When the :ref:`resource tag setup <di-resource-tags>` doesn't require any custom
+logic, two more direct options are available. The first is the
+``#[AutoconfigureResourceTag]`` attribute, which is repeatable and accepts an
+optional second argument with the tag attributes::
+
+    // src/Model/Invoice.php
+    namespace App\Model;
+
+    use Symfony\Component\DependencyInjection\Attribute\AutoconfigureResourceTag;
+
+    #[AutoconfigureResourceTag('app.report_item', ['type' => 'invoice'])]
+    #[AutoconfigureResourceTag('app.exportable')]
+    class Invoice
+    {
+        // ...
+    }
+
+The attribute also works on interfaces and base classes. In that case, every
+class that implements the interface or extends the base class receives the
+resource tag through autoconfiguration, the same way ``#[AutoconfigureTag]``
+applies service tags::
+
+    // src/Model/ReportItemInterface.php
+    namespace App\Model;
+
+    use Symfony\Component\DependencyInjection\Attribute\AutoconfigureResourceTag;
+
+    #[AutoconfigureResourceTag('app.report_item')]
+    interface ReportItemInterface
+    {
+        // ...
+    }
+
+The same definitions can be declared per service in configuration files:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # config/services.yaml
+        services:
+            App\Model\Invoice:
+                resource_tags:
+                    - { name: 'app.report_item', type: 'invoice' }
+                    - 'app.exportable'
+
+    .. code-block:: xml
+
+        <!-- config/services.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+            <services>
+                <service id="App\Model\Invoice">
+                    <resource-tag name="app.report_item" type="invoice"/>
+                    <resource-tag>app.exportable</resource-tag>
+                </service>
+            </services>
+        </container>
+
+    .. code-block:: php
+
+        // config/services.php
+        namespace Symfony\Component\DependencyInjection\Loader\Configurator;
+
+        use App\Model\Invoice;
+
+        return function (ContainerConfigurator $container): void {
+            $services = $container->services();
+
+            $services->set(Invoice::class)
+                ->resourceTag('app.report_item', ['type' => 'invoice'])
+                ->resourceTag('app.exportable')
+            ;
+        };
+
+.. tip::
+
+    Resource tags can also be declared in the ``_defaults`` section to apply
+    them to every service defined in the same file, using the same option names
+    (``resource_tags:`` in YAML, ``<resource-tag>`` inside ``<defaults>`` in
+    XML, ``->defaults()->resourceTag(...)`` in PHP).
 
 Creating custom Tags
 --------------------
