@@ -914,11 +914,15 @@ routing.controller
 
 **Purpose**: Make a controller class discoverable by the ``routing.controllers`` resource
 
-When you import the ``routing.controllers`` resource in your routing
-configuration, Symfony loads the ``#[Route]`` attributes of every service
-tagged with ``routing.controller``. This tag is automatically applied to any
-class that uses a ``#[Route]`` attribute, so you only need to apply it
-manually when service autoconfiguration is disabled for the class.
+Any class that defines at least one ``#[Route]`` attribute is automatically tagged
+with ``routing.controller``. When you import the ``routing.controllers`` resource
+in a routing configuration file, Symfony discovers all services tagged with
+``routing.controller`` and loads the routes defined by their ``#[Route]`` attributes.
+
+.. note::
+
+    Despite their similar names, ``routing.controller`` (singular) is a service
+    tag, whereas ``routing.controllers`` (plural) is a routing resource.
 
 For details, read :ref:`Creating Routes as Attributes <routing-route-attributes>`.
 
