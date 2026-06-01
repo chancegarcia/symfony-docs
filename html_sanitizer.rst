@@ -536,7 +536,7 @@ on all elements allowed *before this setting*.
                     app.post_sanitizer:
                         # ...
                         allow_attributes:
-                            # allow "src' on <iframe> elements
+                            # allow "src" on <iframe> elements
                             src: ['iframe']
 
                             # allow "data-attr" on all elements currently allowed
@@ -555,7 +555,7 @@ on all elements allowed *before this setting*.
 
             <framework:config>
                 <framework:html-sanitizer>
-                    <!-- allow "src' on <iframe> elements -->
+                    <!-- allow "src" on <iframe> elements -->
                     <framework:allow-attribute name="src">
                         <framework:element>iframe</framework:element>
                     </framework:allow-attribute>
@@ -576,7 +576,7 @@ on all elements allowed *before this setting*.
         return static function (FrameworkConfig $framework): void {
             $framework->htmlSanitizer()
                 ->sanitizer('app.post_sanitizer')
-                    // allow "src' on <iframe> elements
+                    // allow "src" on <iframe> elements
                     ->allowAttribute('src', ['iframe'])
 
                     // allow "data-attr" on all elements currently allowed
@@ -591,7 +591,7 @@ on all elements allowed *before this setting*.
 
         $postSanitizer = new HtmlSanitizer(
             (new HtmlSanitizerConfig())
-                // allow "src' on <iframe> elements
+                // allow "src" on <iframe> elements
                 ->allowAttribute('src', ['iframe'])
 
                 // allow "data-attr" on all elements currently allowed
@@ -620,7 +620,7 @@ This option allows you to disallow attributes that were allowed before.
                         drop_attributes:
                             # ...except for the <section> element
                             data-attr: ['section']
-                            # disallows "style' on any allowed element
+                            # disallows "style" on any allowed element
                             style: '*'
 
     .. code-block:: xml
@@ -646,7 +646,7 @@ This option allows you to disallow attributes that were allowed before.
                         <framework:element>section</framework:element>
                     </framework:drop-attribute>
 
-                    <!-- disallows "style' on any allowed element -->
+                    <!-- disallows "style" on any allowed element -->
                     <framework:drop-attribute name="style">
                         <framework:element>*</framework:element>
                     </framework:drop-attribute>
@@ -668,7 +668,7 @@ This option allows you to disallow attributes that were allowed before.
                     // ...except for the <section> element
                     ->dropAttribute('data-attr', ['section'])
 
-                    // disallows "style' on any allowed element
+                    // disallows "style" on any allowed element
                     ->dropAttribute('style', '*')
             ;
         };
@@ -686,7 +686,7 @@ This option allows you to disallow attributes that were allowed before.
                 // ...except for the <section> element
                 ->dropAttribute('data-attr', ['section'])
 
-                // disallows "style' on any allowed element
+                // disallows "style" on any allowed element
                 ->dropAttribute('style', '*')
         );
 
